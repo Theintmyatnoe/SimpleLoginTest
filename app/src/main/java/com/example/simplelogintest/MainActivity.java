@@ -3,7 +3,11 @@ package com.example.simplelogintest;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.Signature;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -26,6 +30,8 @@ import com.squareup.picasso.Picasso;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 
@@ -46,14 +52,30 @@ public class MainActivity extends AppCompatActivity {
         txtUsername = findViewById(R.id.txtUsername);
         txtEmail = findViewById(R.id.txtEmail);
 
+        try {
+            PackageInfo info = getPackageManager().getPackageInfo(
+                    "com.example.simplelogintest",
+                    PackageManager.GET_SIGNATURES);
+            for (Signature signature : info.signatures) {
+                MessageDigest md = MessageDigest.getInstance("SHA");
+                md.update(signature.toByteArray());
+                Log.d("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
+            }
+        }
+        catch (PackageManager.NameNotFoundException e) {
+        }
+        catch (NoSuchAlgorithmException e) {
+        }
+
         boolean loggedOut = AccessToken.getCurrentAccessToken() == null;
 
         if (!loggedOut) {
-            Picasso.with(this).load(Profile.getCurrentProfile().getProfilePictureUri(200, 200)).into(imageView);
-            Log.d("TAG", "Username is: " + Profile.getCurrentProfile().getName());
-
             //Using Graph API
             getUserProfile(AccessToken.getCurrentAccessToken());
+//
+//            Picasso.with(this).load(Profile.getCurrentProfile().getProfilePictureUri(200, 200)).into(imageView);
+//            Log.d("TAG", "Username is: " + Profile.getCurrentProfile().getName());
+
         }
 
 
@@ -102,6 +124,8 @@ public class MainActivity extends AppCompatActivity {
                 // App code
             }
         });
+
+
     }
 
     @Override
